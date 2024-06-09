@@ -1,10 +1,10 @@
 "use strict";
 
-import clear from 'rollup-plugin-clear';
-import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from 'rollup-plugin-typescript2';
+import resolve from '@rollup/plugin-node-resolve';
+import clear from 'rollup-plugin-clear';
 import screeps from 'rollup-plugin-screeps';
+import typescript from 'rollup-plugin-typescript2';
 
 let cfg;
 const dest = process.env.DEST;
@@ -20,6 +20,11 @@ export default {
     file: "dist/main.js",
     format: "cjs",
     sourcemap: true
+  },
+  watch: {
+    chokidar: {
+        usePolling: true
+    }
   },
 
   plugins: [
