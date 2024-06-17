@@ -12,5 +12,5 @@
     "ms-vscode.vscode-typescript-next"
   ],
   // Launch the sync tool to Screeps
-  "postStartCommand": "rollup -cw --environment DEST:main"
+  "postStartCommand": "rollup -cw --environment DEST:pserver"
 }
