@@ -14,6 +14,7 @@ export class MapCache {
     private _creepNameToPos: ReversableMap<string, Id<RoomPosition>> = new ReversableMap()
     private _freeMiningPos: Set<Id<RoomPosition>> = new Set()
     private _searchedRooms: Map<string, boolean> = new Map()
+    private _structures: ConstructionSite[] = []
     nRoomsToSearch: number = 3
 
     // Used to check which roles are under/over represented
@@ -23,6 +24,31 @@ export class MapCache {
         console.log('MapCache initialized')
         this.checkSpawns()
         this.checkCreeps()
+        this.setupSpawnStructures()
+    }
+
+    public setupSpawnStructures() {
+        let spawn = Game.spawns[this.homeSpawn]
+        let spawnPos = spawn.pos
+        let spawnRoom = spawn.room
+        // for (let site of spawnRoom.find(FIND_CONSTRUCTION_SITES)) {
+        //     site.remove()
+        // }
+        for (let i = -1; i < 2; i++) {
+            for (let j = -1; j < 2; j++) {
+                if (i == 0 && j == 0) { continue }
+                spawnRoom.createConstructionSite(spawnPos.x + i, spawnPos.y + j, STRUCTURE_ROAD)
+            }
+        }
+        for (let source of spawnRoom.find(FIND_SOURCES)) {
+            spawnPos.findPathTo(source.pos, {
+                'ignoreCreeps': true,
+                'ignoreRoads': true,
+                'range': 2 // Don't build on source OR harvester
+            }).forEach((pos) => {
+                spawnRoom.createConstructionSite(pos.x, pos.y, STRUCTURE_ROAD)
+            })
+        }
     }
 
     public checkSpawns() {
@@ -69,8 +95,8 @@ export class MapCache {
         let target = this._freeMiningPos.entries().next().value[0] as Id<RoomPosition> | undefined
         if (typeof target !== 'string') {
             console.log('ERROR: target is not a RoomPosition', target)
-             return false
-            }
+            return false
+        }
         creep.memory.targetPosId = target
         this._setMiningSpot(creep)
         return true
@@ -101,7 +127,7 @@ export class MapCache {
     }
 
     public checkDeadCreeps() {
-        for (const name in Memory.creeps){
+        for (const name in Memory.creeps) {
             if (name in Game.creeps) {
                 continue
             } // Still alive
@@ -150,7 +176,7 @@ export class MapCache {
 
         this._searchedRooms.set(room, true)
         for (let pos of this.getMinerPositions(room)) {
-            if (pos == undefined) { console.log('ERROR: Failed to find miner positions', room); return}
+            if (pos == undefined) { console.log('ERROR: Failed to find miner positions', room); return }
             let posId = pos.id
             let unoccupied = !this._creepNameToPos.reverse.has(posId)
             if (unoccupied) { this._freeMiningPos.add(posId) }
@@ -198,10 +224,10 @@ export class RoomCords {
 
     public *neigh() {
         // let rooms = [
-            yield RoomCords.fromCords(this.x + 1, this.y)
-            yield RoomCords.fromCords(this.x - 1, this.y)
-            yield RoomCords.fromCords(this.x, this.y + 1)
-            yield RoomCords.fromCords(this.x, this.y - 1)
+        yield RoomCords.fromCords(this.x + 1, this.y)
+        yield RoomCords.fromCords(this.x - 1, this.y)
+        yield RoomCords.fromCords(this.x, this.y + 1)
+        yield RoomCords.fromCords(this.x, this.y - 1)
         // ]
         // for (let neigh of rooms) {
         //     if (neigh.name in Game.rooms) { yield neigh }

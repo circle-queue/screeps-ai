@@ -48,7 +48,6 @@ export class Collector {
             let storages = structures.filter((s) => (s.structureType == STRUCTURE_CONTAINER) && s.store.energy < 2000)
             let storage = creep.pos.findClosestByPath(storages)
             if (storage == null) {
-                // console.log('Error: no storage found')
                 return
             }
             target = storage
@@ -59,10 +58,13 @@ export class Collector {
         let code = creep.transfer(target, RESOURCE_ENERGY)
         switch (code){
             case OK:
+            case ERR_BUSY:
                 break
             case ERR_NOT_IN_RANGE:
                 creep.moveTo(target);
                 break
+            default:
+                console.log('ERROR: in', this.name, code);
 
         }
     }

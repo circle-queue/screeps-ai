@@ -1,7 +1,8 @@
 /// <reference path=".d.ts" />
 
-// Import prototypes first
-import RoomPosition from "prototype/RoomPosition";
+// Setup prototypes before imports
+import { setupRoomPositionPrototype } from "prototype/RoomPosition";
+setupRoomPositionPrototype()
 
 import { Builder } from "role/builder";
 import { Collector } from "role/collector";
@@ -14,7 +15,7 @@ class Tester {
   static default_body = [WORK, CARRY, MOVE]
 
   public static run(creep: Creep) {
-    let path = PathFinder.search(creep.pos, new RoomPosition(25, 25,  'W2N5'))
+    let path = PathFinder.search(creep.pos, new RoomPosition(25, 25, 'W2N5'))
     // console.log('path', path.path, path.incomplete, path.ops, path.cost, creep.moveByPath(path.path))
   }
 }
@@ -54,13 +55,13 @@ function autoSpawnCreep() {
     'Free Mining Spots:', cache.hasMiningSpot(),
   )
 
-  if (false) {} // formatting only
+  if (false) { } // formatting only
 
   else if (roleCount(Harvester.name) < 1) { spawnCreep(Harvester.name) }
   else if (roleCount(Collector.name) < 1) { spawnCreep(Collector.name) }
 
   // else if (roleCount(Collector.name) < (roleCount(Harvester.name) / 3)){ spawnCreep(Collector.name) }
-  // else if (roleCount(Builder.name) < roleCount(Harvester.name) / 3){ spawnCreep(Builder.name) }
+  else if (roleCount(Builder.name) < roleCount(Harvester.name) / 3) { spawnCreep(Builder.name) }
   // else if (roleCount(Upgrader.name) < roleCount(Harvester.name) / 3){ spawnCreep(Upgrader.name) }
 
   // else if (roleCount(Tester.name) < 1){ spawnCreep(Tester.name) }
@@ -97,7 +98,7 @@ function spawnCreep(role: string, spawn: string = 'Spawn1') {
 
   if (role == Harvester.name) {
     let success = cache.assignMiningSpot(creep)
-    if (!success){
+    if (!success) {
       return console.log('ERROR: Spawned harvester without free mining spots', creep.name)
     }
   }

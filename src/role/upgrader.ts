@@ -17,6 +17,7 @@ export class Upgrader {
         switch (code) {
             case OK:
             case ERR_TIRED:
+            case ERR_BUSY:
                 break;
             case ERR_NOT_IN_RANGE:
                 creep.moveTo(energy);

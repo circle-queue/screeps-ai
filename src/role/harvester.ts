@@ -23,11 +23,11 @@ export class Harvester {
             switch (code) {
                 case OK:
                 case ERR_NOT_ENOUGH_RESOURCES:
+                case ERR_BUSY:
                     break
                 case ERR_NOT_IN_RANGE:
                     creep.memory.targetObjId = undefined
                 case ERR_NOT_OWNER:
-                case ERR_BUSY:
                 case ERR_INVALID_TARGET:
                 case ERR_NO_BODYPART:
                 case ERR_TIRED:
