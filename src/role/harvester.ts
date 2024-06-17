@@ -1,7 +1,5 @@
 /// <reference path="../.d.ts" />
 
-import { deserializeRoomPosition } from "prototype/RoomPosition"
-
 export class Harvester {
     static default_body = [WORK, WORK, CARRY, MOVE]
     source: Source | undefined
@@ -48,7 +46,7 @@ export class Harvester {
         }
 
 
-        let target = deserializeRoomPosition(creep.memory.targetPosId)
+        let target = RoomPosition.fromId(creep.memory.targetPosId)
         creep.moveTo(target)
         if (_.isEqual(creep.pos.id, creep.memory.targetPosId)) {
             let source = creep.pos.findClosestByPath(creep.room.find(FIND_SOURCES))
