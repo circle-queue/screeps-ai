@@ -1,5 +1,8 @@
 /// <reference path=".d.ts" />
 
+// Import prototypes first
+import RoomPosition from "prototype/RoomPosition";
+
 import { Builder } from "role/builder";
 import { Collector } from "role/collector";
 import { Harvester } from "role/harvester";
@@ -42,12 +45,21 @@ export const loop = ErrorMapper.wrapLoop(() => {
 function autoSpawnCreep() {
   let roleCount = (name: string) => cache.roleCounts.get(name)
 
+  console.log(
+    'Harvester:', roleCount(Harvester.name),
+    'Collector:', roleCount(Collector.name),
+    'Builder:', roleCount(Builder.name),
+    'Upgrader:', roleCount(Upgrader.name),
+    'Tester:', roleCount(Tester.name),
+    'Free Mining Spots:', cache.hasMiningSpot(),
+  )
+
   if (false) {} // formatting only
 
   else if (roleCount(Harvester.name) < 1) { spawnCreep(Harvester.name) }
   else if (roleCount(Collector.name) < 1) { spawnCreep(Collector.name) }
 
-  else if (roleCount(Collector.name) < roleCount(Harvester.name) / 3){ spawnCreep(Collector.name) }
+  // else if (roleCount(Collector.name) < (roleCount(Harvester.name) / 3)){ spawnCreep(Collector.name) }
   // else if (roleCount(Builder.name) < roleCount(Harvester.name) / 3){ spawnCreep(Builder.name) }
   // else if (roleCount(Upgrader.name) < roleCount(Harvester.name) / 3){ spawnCreep(Upgrader.name) }
 
@@ -65,13 +77,23 @@ function spawnCreep(role: string, spawn: string = 'Spawn1') {
   }
 
   let name = role + '@' + Game.time
-  spawn_.spawnCreep(
+  let code = spawn_.spawnCreep(
     obj.default_body,
     name,
     { memory: { role: role, working: false, targetPosId: undefined, targetObjId: undefined } }
   );
+  switch (code) {
+    case OK:
+      break
+    case ERR_NOT_ENOUGH_ENERGY:
+    case ERR_BUSY:
+      return
+    default:
+      return console.log('ERROR: Spawning error:', code)
+  }
+  cache.roleCounts.increment(role)
   let creep = Game.creeps[name];
-  if (creep == undefined) { return } // Failed to spawn creep
+  if (creep == undefined) { return console.log('ERROR: failed to get spawned creep') } // Failed to spawn creep
 
   if (role == Harvester.name) {
     let success = cache.assignMiningSpot(creep)

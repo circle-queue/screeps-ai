@@ -16,7 +16,6 @@ declare module "ambient-module-name" {
 
     interface CreepMemory {
       role: string;
-    //   room: string;
       working: boolean;
       targetPosId: Id<RoomPosition> | undefined;
       targetObjId: Id<Source> | undefined;
@@ -27,7 +26,6 @@ declare module "ambient-module-name" {
 
     interface RoomPosition {
       id: Id<RoomPosition>
-      // fromId(id: Id<RoomPosition>): RoomPosition
     }
   }
 }

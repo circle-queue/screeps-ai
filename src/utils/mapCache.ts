@@ -41,15 +41,21 @@ export class MapCache {
         for (const name in Memory.creeps) {
             // First, delete dead creeps
             let creep = Game.creeps[name]
+            let role = creep.memory.role
+            if (role == undefined) {
+                console.log('ERROR: Creep has no role. Killing', name)
+                creep.suicide()
+            }
             if (creep == undefined) {
                 delete Memory.creeps[name]
                 continue
             }
+
             // Count role
-            this.roleCounts.increment(creep.memory.role)
+            this.roleCounts.increment(role)
             this.searchRoom(creep.room.name)
 
-            if (creep.memory.role == Harvester.name) { this._setMiningSpot(creep) }
+            if (role == Harvester.name) { this._setMiningSpot(creep) }
         }
     }
 
@@ -78,7 +84,9 @@ export class MapCache {
         if (this._creepNameToPos.reverse.has(targetId)) {
             return console.log('ERROR: MiningSpot already occupied', creep.name)
         }
-        this._freeMiningPos.delete(targetId) // May or may not have been added
+        if (this._freeMiningPos.delete(targetId) == false) {
+            return console.log('ERROR: Failed to remove mining spot', creep.name)
+        }
         this._creepNameToPos.set(creep.name, targetId)
     }
 
@@ -120,7 +128,6 @@ export class MapCache {
     }
 
     private *bfs(room: string, n_rooms: number) {
-        console.log('foo')
         // Breadth first search to find the n_rooms closest to room
         // Doesn't include a room if there is no exit
         let rooms: string[] = [room];
@@ -143,6 +150,7 @@ export class MapCache {
 
         this._searchedRooms.set(room, true)
         for (let pos of this.getMinerPositions(room)) {
+            if (pos == undefined) { console.log('ERROR: Failed to find miner positions', room); return}
             let posId = pos.id
             let unoccupied = !this._creepNameToPos.reverse.has(posId)
             if (unoccupied) { this._freeMiningPos.add(posId) }

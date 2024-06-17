@@ -23,8 +23,4 @@ Object.defineProperty(RoomPosition.prototype, 'id', {
     return new RoomPosition(deserialized.x, deserialized.y, deserialized.roomName);
 }
 
-
-export function deserializeRoomPosition(serialized: Id<RoomPosition>): RoomPosition {
-    let deserialized = JSON.parse(serialized);
-    return new RoomPosition(deserialized.x, deserialized.y, deserialized.roomName);
-}
+export default RoomPosition;
