@@ -1,6 +1,7 @@
 /// <reference path="../.d.ts" />
 
 export class Collector {
+    static default_body = [CARRY, CARRY, MOVE]
     public static run(creep: Creep) {
         if (creep.memory.working) {
             this.work(creep);
@@ -37,7 +38,7 @@ export class Collector {
         let spawn = creep.room.find(FIND_MY_SPAWNS)[0]
         let target
         if (spawn === null) { console.log('Error: no spawn found') }
-        if (spawn.store.getFreeCapacity(RESOURCE_ENERGY) > creep.store[RESOURCE_ENERGY]) {
+        if (spawn.store.getFreeCapacity(RESOURCE_ENERGY) != 0) {
             target = spawn
         } else {
             let structures = creep.room.find(FIND_STRUCTURES)
@@ -47,7 +48,7 @@ export class Collector {
             let storages = structures.filter((s) => (s.structureType == STRUCTURE_CONTAINER) && s.store.energy < 2000)
             let storage = creep.pos.findClosestByPath(storages)
             if (storage == null) {
-                console.log('Error: no storage found')
+                // console.log('Error: no storage found')
                 return
             }
             target = storage

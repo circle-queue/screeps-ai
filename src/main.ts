@@ -1,42 +1,35 @@
 /// <reference path=".d.ts" />
+
 import { Builder } from "role/builder";
 import { Collector } from "role/collector";
 import { Harvester } from "role/harvester";
 import { Upgrader } from "role/upgrader";
-import { BUILDER, COLLECTOR, HARVESTER, UPGRADER } from "utils/const";
-import { Counter } from "utils/datastructures";
 import { ErrorMapper } from "utils/ErrorMapper";
+import { MapCache } from "utils/mapCache";
 
-const roleMap: { [role: string]: any }  = {
-  [HARVESTER]: Harvester,
-  [COLLECTOR]: Collector,
-  [BUILDER]: Builder,
-  [UPGRADER]: Upgrader,
+class Tester {
+  static default_body = [WORK, CARRY, MOVE]
+
+  public static run(creep: Creep) {
+    let path = PathFinder.search(creep.pos, new RoomPosition(25, 25,  'W2N5'))
+    // console.log('path', path.path, path.incomplete, path.ops, path.cost, creep.moveByPath(path.path))
+  }
 }
 
-// When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
-// This utility uses source maps to get the line numbers and file names of the original, TS source code
-export const loop = ErrorMapper.wrapLoop(() => {
-  // Automatically delete memory of missing creeps & count the roles
-  let roleCounts = new Counter()
-  for (const name in Memory.creeps) {
-    if (!(name in Game.creeps)) {
-      delete Memory.creeps[name];
-    } else {
-      roleCounts.increment(Game.creeps[name].memory.role)
-    }
-  }
 
-  let spawn = Game.spawns['Spawn1'];
-  if (roleCounts.get(HARVESTER) < 5){
-    spawn.spawnCreep([WORK, WORK, CARRY, MOVE], HARVESTER + Game.time, { memory: { role: HARVESTER, working: true} });
-  } else if (roleCounts.get(COLLECTOR) < 2){
-    spawn.spawnCreep([CARRY, CARRY, MOVE], COLLECTOR + Game.time, { memory: { role: COLLECTOR, working: false} });
-  } else if (roleCounts.get(BUILDER) < 4){
-    spawn.spawnCreep([WORK, WORK, CARRY, MOVE], BUILDER + Game.time, { memory: { role: BUILDER, working: false} });
-  } else if (roleCounts.get(UPGRADER) < 2){
-    spawn.spawnCreep([WORK, WORK, CARRY, MOVE], UPGRADER + Game.time, { memory: { role: UPGRADER, working: false} });
-  }
+const roleMap = {
+  [Harvester.name]: Harvester,
+  [Collector.name]: Collector,
+  [Builder.name]: Builder,
+  [Upgrader.name]: Upgrader,
+  [Tester.name]: Tester
+}
+
+let cache = new MapCache() // Big object that stores information about the game state
+
+export const loop = ErrorMapper.wrapLoop(() => {
+  cache.checkDeadCreeps()
+  autoSpawnCreep()
 
   for (const name in Game.creeps) {
     const creep = Game.creeps[name];
@@ -45,3 +38,45 @@ export const loop = ErrorMapper.wrapLoop(() => {
     obj.run(creep);
   }
 });
+
+function autoSpawnCreep() {
+  let roleCount = (name: string) => cache.roleCounts.get(name)
+
+  if (false) {} // formatting only
+
+  else if (roleCount(Harvester.name) < 1) { spawnCreep(Harvester.name) }
+  else if (roleCount(Collector.name) < 1) { spawnCreep(Collector.name) }
+
+  else if (roleCount(Collector.name) < roleCount(Harvester.name) / 3){ spawnCreep(Collector.name) }
+  // else if (roleCount(Builder.name) < roleCount(Harvester.name) / 3){ spawnCreep(Builder.name) }
+  // else if (roleCount(Upgrader.name) < roleCount(Harvester.name) / 3){ spawnCreep(Upgrader.name) }
+
+  // else if (roleCount(Tester.name) < 1){ spawnCreep(Tester.name) }
+
+  else if (cache.hasMiningSpot()) { spawnCreep(Harvester.name) } // Spawn Harvesters while there are free miner positions
+}
+
+function spawnCreep(role: string, spawn: string = 'Spawn1') {
+  let spawn_ = Game.spawns[spawn];
+  let obj = roleMap[role];
+
+  if (role == Harvester.name && !cache.hasMiningSpot()) {
+    return console.log('ERROR: Spawning harvester without free mining spots')
+  }
+
+  let name = role + '@' + Game.time
+  spawn_.spawnCreep(
+    obj.default_body,
+    name,
+    { memory: { role: role, working: false, targetPosId: undefined, targetObjId: undefined } }
+  );
+  let creep = Game.creeps[name];
+  if (creep == undefined) { return } // Failed to spawn creep
+
+  if (role == Harvester.name) {
+    let success = cache.assignMiningSpot(creep)
+    if (!success){
+      return console.log('ERROR: Spawned harvester without free mining spots', creep.name)
+    }
+  }
+}

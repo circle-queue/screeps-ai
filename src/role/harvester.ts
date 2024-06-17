@@ -1,46 +1,61 @@
 /// <reference path="../.d.ts" />
-import { HARVESTER } from "utils/const";
 
-export class Harvester{
+import { deserializeRoomPosition } from "prototype/RoomPosition"
+
+export class Harvester {
+    static default_body = [WORK, WORK, CARRY, MOVE]
+    source: Source | undefined
+
     public static run(creep: Creep) {
-        if (creep.store.getFreeCapacity() == 0) {
-            creep.drop(RESOURCE_ENERGY);
+        if (creep.memory.targetObjId !== undefined) {
+            return this._harvest(creep)
+        } else if (creep.memory.targetPosId !== undefined) {
+            return this._moveToSource(creep)
         } else {
-            let closestSource = creep.pos.findClosestByPath(creep.room.find(FIND_SOURCES))
-            if (closestSource === null) {
-                let neighRoom = Game.map.describeExits(creep.room.name)
-                neighRoom[7]
-            }
-            if (closestSource === null) {
-                console.log('Error: no source found', this.name)
-                return;
-            }
-            if (creep.harvest(closestSource) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(closestSource);
-            }
+            return console.log('Error: no harvester targetPos found', this.name)
         }
     }
-}
 
-export function free_harvester_spots(room: Room): number {
-    let sources = room.find(FIND_SOURCES)
-    if (sources.length == 0) { return 0 }
-
-    let free = 0
-    for (let source of sources) {
-        let pos = source.pos
-        // Count tiles around source
-        for (let x = -1; x < 2; x++) {
-            for (let y = -1; y < 2; y++) {
-                let terrain = room.getTerrain().get(pos.x + x, pos.y + y)
-                if (terrain != TERRAIN_MASK_WALL) { free += 1 }
+    private static _harvest(creep: Creep) {
+        if (creep.store.getFreeCapacity() == 0) { creep.drop(RESOURCE_ENERGY) }
+        if (creep.memory.targetObjId !== undefined) {
+            let source = Game.getObjectById(creep.memory.targetObjId)
+            if (source == null) {return console.log('ERROR: harvester targetObj not found', creep.name)}
+            let code = creep.harvest(source)
+            switch (code) {
+                case OK:
+                case ERR_NOT_ENOUGH_RESOURCES:
+                    break
+                case ERR_NOT_IN_RANGE:
+                    creep.memory.targetObjId = undefined
+                case ERR_NOT_OWNER:
+                case ERR_BUSY:
+                case ERR_INVALID_TARGET:
+                case ERR_NO_BODYPART:
+                case ERR_TIRED:
+                case ERR_NOT_FOUND:
+                default:
+                    console.log('ERROR: harvester harvest', code)
             }
+        } else {
+            console.log('ERROR: harvester targetObj not a source', creep.name)
         }
-        // Deduct occupied tiles
-        let harvesters = room.getPositionAt(pos.x, pos.y)?.findInRange(FIND_MY_CREEPS, 1, { filter: (c) => c.memory.role == HARVESTER })
-        if (harvesters === undefined) { continue }
-        free -= harvesters.length
     }
 
-    return free
+    private static _moveToSource(creep: Creep) {
+        if (!(creep.memory.targetPosId !== undefined)) {
+            return console.log('ERROR: harvester targetPos not a RoomPosition', creep.name)
+        }
+
+
+        let target = deserializeRoomPosition(creep.memory.targetPosId)
+        creep.moveTo(target)
+        if (_.isEqual(creep.pos.id, creep.memory.targetPosId)) {
+            let source = creep.pos.findClosestByPath(creep.room.find(FIND_SOURCES))
+            if (source === null) {
+                return console.log('ERROR: no source found', this.name)
+            }
+            creep.memory.targetObjId = source.id
+        }
+    }
 }

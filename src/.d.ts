@@ -18,9 +18,17 @@ declare module "ambient-module-name" {
       role: string;
     //   room: string;
       working: boolean;
+      targetPosId: Id<RoomPosition> | undefined;
+      targetObjId: Id<Source> | undefined;
+    }
+    interface RoomPositionConstructor {
+      fromId(id: Id<RoomPosition>): RoomPosition
     }
 
-    // Syntax for adding proprties to `global` (ex "global.log")
+    interface RoomPosition {
+      id: Id<RoomPosition>
+      // fromId(id: Id<RoomPosition>): RoomPosition
+    }
   }
 }
 

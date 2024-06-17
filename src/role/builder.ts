@@ -1,6 +1,7 @@
 /// <reference path="../.d.ts" />
 
 export class Builder {
+    static default_body = [WORK, WORK, CARRY, MOVE]
     public static run(creep: Creep) {
         if (creep.memory.working) {
             this.work(creep);
